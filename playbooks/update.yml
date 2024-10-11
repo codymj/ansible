@@ -1,0 +1,12 @@
+---
+- name: update all hosts
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: running apt for upgrade, update, autoremove
+      apt:
+        upgrade: yes
+        update_cache: yes
+        autoclean: yes
+        autoremove: yes

@@ -1,0 +1,27 @@
+---
+- name: deploy mariadb
+  hosts: c0p2
+  tasks:
+    - name: pull docker image
+      docker_image:
+        name: mariadb
+        source: pull
+        tag: 10.6
+    - name: start mariadb container
+      docker_container:
+        name: mariadb
+        image: mariadb:10.6
+        state: started
+        ports:
+          - "3306:3306"
+        pull: true
+        volumes:
+         - "db_data:/var/lib/mysql:rw"
+         - "mariadb-socket:/var/run/mysqld:rw"
+         - "/tmp:/tmp:rw"
+        restart: true
+        env:
+          MARIADB_ROOT_PASSWORD: {{ set this }}
+          MARIADB_USER: {{ set this }}
+          MARIADB_PASSWORD: {{ set this }}
+          MARIADB_DATABASE: {{ set this }}

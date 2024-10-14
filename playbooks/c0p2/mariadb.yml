@@ -6,11 +6,11 @@
       docker_image:
         name: mariadb
         source: pull
-        tag: 10.6
+        tag: 10.11
     - name: start mariadb container
       docker_container:
         name: mariadb
-        image: mariadb:10.6
+        image: mariadb:10.11
         state: started
         ports:
           - "3306:3306"

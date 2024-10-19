@@ -1,0 +1,34 @@
+---
+- name: install jenkins
+  hosts: c0p0
+  become: true
+  vars:
+    jenkins_image: "jenkins/jenkins:lts-jdk17"
+    jenkins_container: "jenkins"
+    jenkins_port: 8080
+    jenkins_home: "/var/jenkins_home"
+  tasks:
+    - name: ensure apt cache is updated
+      apt:
+        update_cache: yes
+    - name: pull jenkins docker image
+      docker_image:
+        name: "{{ jenkins_image }}"
+        source: pull
+    - name: create jenkins home directory
+      file:
+        path: "{{ jenkins_home }}"
+        state: directory
+        owner: 1000
+        group: 1000
+        mode: '0755'
+    - name: run jenkins container
+      docker_container:
+        name: "{{ jenkins_container }}"
+        image: "{{ jenkins_image }}"
+        state: started
+        ports:
+          - "{{ jenkins_port }}:8080"
+        volumes:
+          - "{{ jenkins_home }}:/var/jenkins_home"
+        restart_policy: unless-stopped

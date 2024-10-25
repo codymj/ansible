@@ -1,7 +1,33 @@
 ---
 - name: deploy mariadb
   hosts: c0p2
+  vars_files:
+    - ../../secrets.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    mariadb_volume_path: "/volumes/mariadb"
+    mariadb_user: "user"
+    mariadb_database: "dev"
+    backup_dir: "/backups/mariadb"
+    backup_script: "/usr/local/bin/mariadb-backup.sh"
   tasks:
+    - name: install python3-mysqldb
+      apt:
+        name: python3-mysqldb
+        state: present
+      become: yes
+    - name: create bind mount for mariadb data
+      ansible.builtin.file:
+        path: "{{ mariadb_volume_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      become: yes
+    - name: ensure correct ownership for mariadb volume
+      ansible.builtin.command:
+        cmd: chown -R 999:999 {{ mariadb_volume_path }}
+      become: yes
     - name: pull docker image
       docker_image:
         name: mariadb
@@ -16,12 +42,47 @@
           - "3306:3306"
         pull: true
         volumes:
-         - "db_data:/var/lib/mysql:rw"
-         - "mariadb-socket:/var/run/mysqld:rw"
-         - "/tmp:/tmp:rw"
+         - "{{ mariadb_volume_path }}:/var/lib/mysql:rw"
         restart: true
         env:
-          MARIADB_ROOT_PASSWORD: {{ set this }}
-          MARIADB_USER: {{ set this }}
-          MARIADB_PASSWORD: {{ set this }}
-          MARIADB_DATABASE: {{ set this }}
+          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+          MARIADB_USER: "{{ mariadb_user }}"
+          MARIADB_PASSWORD: "{{ mariadb_password }}"
+          MARIADB_DATABASE: "{{ mariadb_database }}"
+    - name: grant full privileges to the user on the database
+      community.mysql.mysql_user:
+        state: present
+        name: "{{ mariadb_user }}"
+        password: "{{ mariadb_password }}"
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+        login_host: "127.0.0.1"
+        priv: "{{ mariadb_database }}.*:ALL"
+    - name: create the backup script
+      copy:
+        dest: "{{ backup_script }}"
+        content: |
+          #!/bin/bash
+          DB_USER="{{ mariadb_user }}"
+          DB_PASSWORD="{{ mariadb_password }}"
+          DB_NAME="{{ mariadb_database }}"
+          BACKUP_DIR="{{ backup_dir }}"
+          DATE=$(date +"%Y%m%d_%H%M%S")
+          mysqldump -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" > "$BACKUP_DIR/$DB_NAME_$DATE.sql"
+          find "$BACKUP_DIR" -type f -name "*.sql" -mtime +7 -exec rm {} \;
+        mode: '0755'
+      become: yes
+    - name: create backup directory if it doesn't exist
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+      become: yes
+    - name: create a cron job for daily backup
+      cron:
+        name: "mariadb backup (daily)"
+        minute: "0"
+        hour: "3"
+        job: "{{ backup_script }}"
+        state: present
+      become: yes

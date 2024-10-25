@@ -6,7 +6,7 @@ Pods in my network are grouped by cluster and 0-indexed. Each pod is a Lenovo Th
 - 32 GB DDR4-2400 RAM
 - 250 GB WD Blue SN570
 
-Cluster 0 contains the following pods:
+Cluster 0 contains the following nodes:
 
 - `c0p0` = cluster 0, pod 0
 - `c0p1` = cluster 0, pod 1
@@ -14,6 +14,17 @@ Cluster 0 contains the following pods:
 - `c0p3` = cluster 0, pod 3
 
 where `c0p0`, `c0p1`, `c0p2` and `c0p3` are hostnames defined in `/etc/hosts`. There are plans to stand up more clusters in the future for redundancy.
+
+This setup is not set in stone and is a work in progress.
+
+## Create Secrets Vault
+
+    ansible-vault create secrets.yml
+
+Add the following secrets:
+
+- `mariadb_root_password`
+- `mariadb_password`
 
 ## All Pods
 
@@ -37,7 +48,7 @@ where `c0p0`, `c0p1`, `c0p2` and `c0p3` are hostnames defined in `/etc/hosts`. T
 - `[todo]` App
 - `[todo]` App
 
-## `c0p2` - Persitence, Messaging
+## `c0p2` - Persistence, Messaging
 
 - `[todo]` Kafka
 - `[todo]` Redis
@@ -47,11 +58,13 @@ where `c0p0`, `c0p1`, `c0p2` and `c0p3` are hostnames defined in `/etc/hosts`. T
 
 #### Installation
 
-    ansible-playbook playbooks/c0p2/mariadb.yml --ask-become-pass
+    ansible-playbook playbooks/c0p2/mariadb.yml --ask-become-pass --ask-vault-pass
+
+Note: You will need to add `mariadb_root_password` and `mariadb_password` to a `secrets.yml` vault.
 
 #### Connect to MariaDB container
 
-    mariadb -h c0p2 -P3306 -u {MARIADB_USER} -p{MARIADB_PASSWORD}
+    mariadb -u {MARIADB_USER} -p -h c0p2
 
 ## `c0p3` - Metrics, Alerts
 

@@ -40,7 +40,17 @@ Add the following secrets:
 
 - `[todo]` Traefik
 - `[todo]` Kubernetes
-- `[todo]` Jenkins
+- Jenkins
+
+### Jenkins
+
+#### Install Jenkins
+
+    ansible-playbook playbooks/c0p0/jenkins.yml --ask-become-pass
+
+#### Login to Jenkins
+
+Visit <http://c0p0:8080>
 
 ## `c0p1` - Business Services
 
@@ -56,7 +66,7 @@ Add the following secrets:
 
 ### MariaDB
 
-#### Installation
+#### Install MariaDB
 
     ansible-playbook playbooks/c0p2/mariadb.yml --ask-become-pass --ask-vault-pass
 

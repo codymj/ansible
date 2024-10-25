@@ -5,6 +5,7 @@
     - ../../secrets.yml
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    container_name: mariadb
     mariadb_volume_path: "/volumes/mariadb"
     mariadb_user: "user"
     mariadb_database: "dev"
@@ -20,8 +21,8 @@
       ansible.builtin.file:
         path: "{{ mariadb_volume_path }}"
         state: directory
-        owner: root
-        group: root
+        owner: cmj
+        group: cmj
         mode: '0755'
       become: yes
     - name: ensure correct ownership for mariadb volume
@@ -35,7 +36,7 @@
         tag: 10.11
     - name: start mariadb container
       docker_container:
-        name: mariadb
+        name: "{{ container_name }}"
         image: mariadb:10.11
         state: started
         ports:
@@ -49,6 +50,9 @@
           MARIADB_USER: "{{ mariadb_user }}"
           MARIADB_PASSWORD: "{{ mariadb_password }}"
           MARIADB_DATABASE: "{{ mariadb_database }}"
+    - name: pause to allow mariadb to start
+      ansible.builtin.pause:
+        seconds: 5
     - name: grant full privileges to the user on the database
       community.mysql.mysql_user:
         state: present
@@ -58,30 +62,35 @@
         login_password: "{{ mariadb_root_password }}"
         login_host: "127.0.0.1"
         priv: "{{ mariadb_database }}.*:ALL"
-    - name: create the backup script
-      copy:
-        dest: "{{ backup_script }}"
-        content: |
-          #!/bin/bash
-          DB_USER="{{ mariadb_user }}"
-          DB_PASSWORD="{{ mariadb_password }}"
-          DB_NAME="{{ mariadb_database }}"
-          BACKUP_DIR="{{ backup_dir }}"
-          DATE=$(date +"%Y%m%d_%H%M%S")
-          mysqldump -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" > "$BACKUP_DIR/$DB_NAME_$DATE.sql"
-          find "$BACKUP_DIR" -type f -name "*.sql" -mtime +7 -exec rm {} \;
-        mode: '0755'
-      become: yes
     - name: create backup directory if it doesn't exist
       file:
         path: "{{ backup_dir }}"
         state: directory
         mode: '0755'
       become: yes
+    - name: create the backup script
+      copy:
+        dest: "{{ backup_script }}"
+        content: |
+          #!/bin/bash
+          DATE=$(date +"%Y%m%d_%H%M%S")
+          BACKUP_FILE="/backup/mysql_backup_${DATE}.tar.gz"
+
+          # standup temp container to backup mariadb data
+          docker run --rm \
+            --volumes-from {{ container_name }} \
+            -v {{ backup_dir }}:/backup \
+            alpine \
+            sh -c "cd /var/lib/mysql && tar czf ${BACKUP_FILE} ."
+
+          # keep the last 7 backups
+          find {{ backup_dir }} -type f -name "*.tar.gz" -mtime +7 -delete
+        mode: '0755'
+      become: yes
     - name: create a cron job for daily backup
       cron:
         name: "mariadb backup (daily)"
-        minute: "0"
+        minute: "33"
         hour: "3"
         job: "{{ backup_script }}"
         state: present

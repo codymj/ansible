@@ -58,3 +58,6 @@
       service:
         name: jenkins
         state: restarted
+
+# May need to do this for private repos to get Jenkins to build:
+# sudo -u jenkins git config --global --add safe.directory /path/to/repo.git

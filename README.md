@@ -1,6 +1,7 @@
 # Ansible
 
-Pods in my network are grouped by cluster and 0-indexed. Each pod is a Lenovo ThinkCentre M900 running a minimal Debian OS with the following specs:
+Pods in my network are grouped by cluster and 0-indexed. Each pod is a Lenovo
+ThinkCentre M900 running a minimal Debian OS with the following specs:
 
 - Quad-core Intel i5-6500T
 - 32 GB DDR4-2400 RAM
@@ -13,7 +14,8 @@ Cluster 0 contains the following nodes:
 - `c0p2` = cluster 0, pod 2
 - `c0p3` = cluster 0, pod 3
 
-where `c0p0`, `c0p1`, `c0p2` and `c0p3` are hostnames defined in `/etc/hosts`. There are plans to stand up more clusters in the future for redundancy.
+where `c0p0`, `c0p1`, `c0p2` and `c0p3` are hostnames defined in `/etc/hosts`.
+There are plans to stand up more clusters in the future for redundancy.
 
 This setup is not set in stone and is a work in progress.
 
@@ -70,7 +72,8 @@ Visit <http://c0p0:8080>
 
     ansible-playbook playbooks/c0p2/mariadb.yml --ask-become-pass --ask-vault-pass
 
-Note: You will need to add `mariadb_root_password` and `mariadb_password` to a `secrets.yml` vault.
+Note: You will need to add `mariadb_root_password` and `mariadb_password` to a
+`secrets.yml` vault.
 
 #### Connect to MariaDB container
 

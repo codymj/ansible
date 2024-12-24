@@ -84,7 +84,7 @@
             sh -c "cd /var/lib/mysql && tar czf ${BACKUP_FILE} ."
 
           # keep the last 7 backups
-          find {{ backup_dir }} -type f -name "*.tar.gz" -mtime +7 -delete
+          find {{ backup_dir }} -type f -name "*.tar.gz" -mtime +6 -delete
         mode: '0755'
       become: yes
     - name: create a cron job for daily backup

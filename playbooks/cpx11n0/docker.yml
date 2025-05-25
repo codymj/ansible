@@ -1,0 +1,41 @@
+---
+- name: install docker
+  hosts: cpx11n0
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+    - name: install required packages
+      ansible.builtin.dnf:
+        name:
+          - dnf-plugins-core
+          - curl
+        state: present
+    - name: add docker repository
+      ansible.builtin.command: >
+        dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+    - name: enable docker repo
+      ansible.builtin.command: >
+        dnf config-manager --set-enabled docker-ce-stable
+      when: ansible_distribution_major_version == "9"
+    - name: install docker packages
+      ansible.builtin.dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: latest
+    - name: enable and start docker service
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+    - name: add user cmj to docker group
+      ansible.builtin.user:
+        name: cmj
+        groups: docker
+        append: yes

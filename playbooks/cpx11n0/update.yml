@@ -1,0 +1,13 @@
+---
+- name: update cpx11n0 for bug fix and security updates
+  hosts: cpx11n0
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+    - name: apply bug fix and security updates
+      ansible.builtin.command: dnf update --refresh --security --bugfix -y
+    - name: remove orphaned packages
+      ansible.builtin.command: dnf autoremove -y
+    - name: clean all cached dnf packages
+      ansible.builtin.command: dnf clean packages

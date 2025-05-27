@@ -39,7 +39,7 @@ We want to make sure we secure our nodes by disabling SSH password authenticatio
 
     # vim /etc/ssh/ssh_config
 
-Uncomment and/or set the following properties
+Uncomment and/or set `PasswordAuthentication no`
 
     # systemctl restart sshd
 

@@ -1,6 +1,6 @@
 ---
-- name: install docker
-  hosts: cpx11n0
+- name: install required packages
+  hosts: all
   become: yes
   vars:
     ansible_python_interpreter: /usr/bin/python3.9
@@ -10,6 +10,7 @@
         name:
           - dnf-plugins-core
           - curl
+          - vim-enhanced
         state: present
     - name: add docker repository
       ansible.builtin.command: >

@@ -28,8 +28,8 @@ After installing AlmaLinux 9, there are a few things which need to be done.
 
 ### Create `authorized_keys` File and Populate
 
-    $ mkdir ~/.ssh && chmod 700 ~/.ssh
-    $ touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+    mkdir ~/.ssh && chmod 700 ~/.ssh
+    touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
 
 Add your ansible user's public key inside `authorized_keys`.
 
@@ -45,7 +45,7 @@ Uncomment and/or set `PasswordAuthentication no`
 
 ## Create Secrets Vault
 
-    $ ansible-vault create secrets.yml
+    ansible-vault create secrets.yml
 
 Add the following secrets:
 
@@ -55,8 +55,8 @@ Add the following secrets:
 
 ### Update
 
-    $ ansible-playbook playbooks/update.yml --ask-become-pass
+    ansible-playbook playbooks/update.yml --ask-become-pass
 
 ### Install Necessary Packages
 
-    $ ansible-playbook playbooks/install.yml --ask-become-pass
+    ansible-playbook playbooks/install.yml --ask-become-pass

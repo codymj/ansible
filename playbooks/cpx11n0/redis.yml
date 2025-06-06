@@ -14,11 +14,13 @@
         name: docker
         enabled: true
         state: started
+
     - name: pull redis image
       community.docker.docker_image:
         name: "redis"
         tag: "{{ redis_version }}"
         source: pull
+
     - name: set redis password in .bashrc
       ansible.builtin.lineinfile:
         path: /home/cmj/.bashrc
@@ -27,6 +29,7 @@
         owner: cmj
         group: cmj
         mode: '0644'
+
     - name: create and run redis container
       community.docker.docker_container:
         name: "{{ redis_container_name }}"

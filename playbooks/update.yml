@@ -5,8 +5,8 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3.9
   tasks:
-    - name: apply bug fix and security updates
-      ansible.builtin.command: dnf update --refresh --security --bugfix -y
+    - name: apply updates
+      ansible.builtin.command: dnf update --refresh -y
     - name: remove orphaned packages
       ansible.builtin.command: dnf autoremove -y
     - name: clean all cached dnf packages

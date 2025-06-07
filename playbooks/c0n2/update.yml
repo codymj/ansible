@@ -1,0 +1,31 @@
+---
+- name: update all hosts for bug fix and security updates
+  hosts: c0n2
+  become: yes
+  tasks:
+    - name: apply updates
+      ansible.builtin.command: dnf update --refresh -y
+    - name: remove orphaned packages
+      ansible.builtin.command: dnf autoremove -y
+    - name: clean all cached dnf packages
+      ansible.builtin.command: dnf clean packages
+
+    - name: check if reboot is required
+      ansible.builtin.shell: "dnf needs-restarting -r"
+      register: reboot_check
+      changed_when: false
+      failed_when: false
+    - name: notify if reboot is required
+      ansible.builtin.debug:
+        msg: "reboot is required"
+      when: reboot_check.rc != 0
+
+    - name: check if services need restarting
+      ansible.builtin.command: needs-restarting
+      register: service_check
+      changed_when: false
+      failed_when: false
+    - name: notify if services need restarting
+      ansible.builtin.debug:
+        var: service_check.stdout_lines
+      when: service_check.stdout != ""

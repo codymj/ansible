@@ -1,9 +1,7 @@
 ---
 - name: update all hosts for bug fix and security updates
-  hosts: all
+  hosts: c0n1
   become: yes
-  vars:
-    ansible_python_interpreter: /usr/bin/python3.9
   tasks:
     - name: apply updates
       ansible.builtin.command: dnf update --refresh -y

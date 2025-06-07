@@ -1,13 +1,10 @@
 - name: reboot server
   hosts: cpx11n0
-  vars:
-    ansible_python_interpreter: /usr/bin/python3.9
   become: true
   tasks:
     - name: reboot system
       ansible.builtin.reboot:
         reboot_timeout: 90
-    
+
     - name: ping machine
       ansible.builtin.ping:
-

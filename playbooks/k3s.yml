@@ -1,0 +1,69 @@
+---
+- name: initialize k3s on c0n0
+  hosts: c0n0
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+    - name: open required ports
+      firewalld:
+        port: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - 2379-2380/tcp
+        - 6443/tcp
+
+    - name: install k3s
+      shell: |
+        curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} \
+        sh -s - server \
+        --cluster-init --disable=traefik --disable=servicelb \
+        --write-kubeconfig-mode 644
+      args:
+        executable: /bin/bash
+      register: k3s_install
+      changed_when: "'already installed' not in k3s_install.stdout"
+
+- name: initialize k3s on c0n1, c0n2
+  hosts: c0n1, c0n2
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+    - name: open required ports
+      firewalld:
+        port: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - 2379-2380/tcp
+        - 6443/tcp
+
+    - name: install k3s
+      shell: |
+        curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} \
+        sh -s - server \
+        --server https://c0n0:6443 --disable=traefik --disable=servicelb \
+        --write-kubeconfig-mode 644
+      args:
+        executable: /bin/bash
+      register: k3s_install
+      changed_when: "'already installed' not in k3s_install.stdout"
+
+- name: initialize k3s on c0n3
+  hosts: c0n3
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+    - name: install k3s
+      shell: |
+        curl -sfL https://get.k3s.io | K3S_URL=https://c0n0:6443 \
+        K3S_TOKEN={{ k3s_token }} sh -
+      args:
+        executable: /bin/bash
+      register: k3s_install
+      changed_when: "'already installed' not in k3s_install.stdout"

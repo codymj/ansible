@@ -1,12 +1,9 @@
 ---
-- name: install required packages
+- name: install base packages
   hosts: all
   become: yes
-  vars:
-    ansible_python_interpreter: /usr/bin/python3.9
   tasks:
-    # base packages
-    - name: install required packages
+    - name: install packages
       ansible.builtin.dnf:
         name:
           - dnf-utils
@@ -14,67 +11,3 @@
           - curl
           - vim-enhanced
         state: present
-
-    # docker
-    - name: add docker repository
-      ansible.builtin.command: >
-        dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-      args:
-        creates: /etc/yum.repos.d/docker-ce.repo
-    - name: enable docker repo
-      ansible.builtin.command: >
-        dnf config-manager --set-enabled docker-ce-stable
-      when: ansible_distribution_major_version == "9"
-    - name: install docker packages
-      ansible.builtin.dnf:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
-        state: latest
-    - name: enable and start docker service
-      ansible.builtin.systemd:
-        name: docker
-        enabled: true
-        state: started
-    - name: add user cmj to docker group
-      ansible.builtin.user:
-        name: cmj
-        groups: docker
-        append: yes
-
-    # fail2ban
-    - name: ensure epel repo is enabled
-      ansible.builtin.dnf:
-        name: epel-release
-        state: present
-    - name: install fail2ban
-      ansible.builtin.dnf:
-        name: fail2ban
-        state: present
-    - name: copy jail.conf to jail.local
-      ansible.builtin.copy:
-        src: /etc/fail2ban/jail.conf
-        dest: /etc/fail2ban/jail.local
-        remote_src: yes
-        force: no
-    - name: configure fail2ban sshd jail
-      ansible.builtin.blockinfile:
-        path: /etc/fail2ban/jail.local
-        marker: "# {mark} ANSIBLE MANAGED SSHD JAIL"
-        block: |
-          [sshd]
-          enabled = true
-          port    = ssh
-          filter  = sshd
-          logpath = /var/log/secure
-          backend = systemd
-          maxretry = 3
-          findtime = 10m
-          bantime = 12h
-    - name: restart fail2ban
-      ansible.builtin.service:
-        name: fail2ban
-        state: restarted
